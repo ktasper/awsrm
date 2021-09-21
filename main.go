@@ -1,21 +1,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/manifoldco/promptui"
 	"log"
 	"os"
 	"strings"
-	"github.com/manifoldco/promptui"
-	"flag"
 )
 
 // Error handling
 func exitErrorf(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, msg+"\n", args...)
+	_, err := fmt.Fprintf(os.Stderr, msg+"\n", args...)
+	if err != nil {
+		return
+	}
 	os.Exit(1)
 }
 
@@ -32,7 +35,7 @@ func yesNo() bool {
 	return result == "Yes"
 }
 
-func emtpyBucket(svc *s3.S3, bucketName string)  {
+func emtpyBucket(svc *s3.S3, bucketName string) {
 	// Create a list iterator to iterate through the list of bucket objects, deleting each object. If an error occurs, call exitErrorf.
 	// Try and list all the buckets
 	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
@@ -64,40 +67,39 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 	})
 }
 
-
 func main() {
 
 	// Define flags
-	useProfile := flag.String("profile","default","The aws profile you want to use.")
-	useRegion := flag.String("region","eu-west-1","The aws region you want to use")
+	useProfile := flag.String("profile", "default", "The aws profile you want to use.")
+	useRegion := flag.String("region", "eu-west-1", "The aws region you want to use")
 	useBucket := flag.String("buckets", "", "The bucket(s) you want to destroy")
 	verboseMode := flag.Bool("verbose", false, "Verbose mode")
 	dryRunMode := flag.Bool("dry-run", false, "A mode to see what would happen")
 	flag.Parse()
 
-	if *verboseMode{
+	if *verboseMode {
 		fmt.Printf("Verbose: Profile = %q \n", *useProfile)
 		fmt.Printf("Verbose: Region = %q \n", *useRegion)
 		fmt.Printf("Verbose: Bucket(s) = %q \n", *useBucket)
 	}
 
 	// Check to see if the bucket search term is empty, if so tell the user and exit
-	if len(*useBucket) == 0{
+	if len(*useBucket) == 0 {
 		fmt.Println("--buckets is required but found to be empty")
 		os.Exit(1)
 	}
 
 	// credentials from the shared credentials file ~/.aws/credentials.
 	err := os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
-		if *verboseMode{
-			fmt.Println("Verbose: Setting ENV AWS_SDK_LOAD_CONFIG=True")
-		}
+	if *verboseMode {
+		fmt.Println("Verbose: Setting ENV AWS_SDK_LOAD_CONFIG=True")
+	}
 	if err != nil {
 		return
 	}
 	// Set the AWS ENV VAR to use the profile we want
 	err = os.Setenv("AWS_PROFILE", *useProfile)
-	if *verboseMode{
+	if *verboseMode {
 		fmt.Printf("Verbose: Setting AWS_PROFILE=%q \n", *useProfile)
 	}
 	if err != nil {
@@ -107,13 +109,13 @@ func main() {
 	// If the region flag is not set just
 
 	// Connect to AWS
-	if *verboseMode{
+	if *verboseMode {
 		fmt.Println("Verbose: Attempting to connect to AWS")
 	}
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{Region: aws.String(*useRegion),
 			CredentialsChainVerboseErrors: aws.Bool(true)},
-			Profile: *useProfile,
+		Profile: *useProfile,
 	})
 	if err != nil {
 		exitErrorf("Unable to connect to AWS", err)
@@ -121,7 +123,7 @@ func main() {
 	// Create S3 service client
 	svc := s3.New(sess)
 	// Try and list all the buckets
-	if *verboseMode{
+	if *verboseMode {
 		fmt.Println("Verbose: Attempting to list all S3 buckets")
 	}
 	result, err := svc.ListBuckets(nil)
@@ -132,7 +134,6 @@ func main() {
 	// Create a slice to hold the found buckets
 	var foundBuckets []string
 
-
 	// Loop over every bucket and if they match our search term add it to the slice.
 	for _, b := range result.Buckets {
 		bucketName := aws.StringValue(b.Name)
@@ -140,45 +141,44 @@ func main() {
 		if strings.Contains(bucketName, strings.ToLower(*useBucket)) || strings.Contains(bucketName, strings.ToUpper(*useBucket)) {
 			// Append to slice
 			foundBuckets = append(foundBuckets, bucketName)
-			if *verboseMode{
+			if *verboseMode {
 				fmt.Printf("Verbose: Found bucket %q \n", bucketName)
 			}
 		}
 	}
 
 	// If no buckets are found tell the user and exit
-	if len(foundBuckets) == 0{
+	if len(foundBuckets) == 0 {
 		fmt.Printf("No buckets found matching the search term: %q \n", *useBucket)
 		os.Exit(0)
 	}
 
-
 	// Ask if the user wants to delete the buckets
 	fmt.Println("Would you like to delete the following buckets? ")
-	for _, i := range foundBuckets{
+	for _, i := range foundBuckets {
 		fmt.Printf("* %s\n", i)
 	}
 	userConfirmation := yesNo()
-	if userConfirmation == true{
-		if *verboseMode{
+	if userConfirmation == true {
+		if *verboseMode {
 			fmt.Println("Verbose: User Confirmation = Yes")
 		}
 		for _, bucketName := range foundBuckets {
-			if ! *dryRunMode{
+			if !*dryRunMode {
 				fmt.Printf("Attempting to delete: %s\n", bucketName)
 			}
 			// If we are not in dry-run mode actually attempt to empty the bucket
-			if ! *dryRunMode{
-				if *verboseMode{
+			if !*dryRunMode {
+				if *verboseMode {
 					fmt.Printf("Verbose: Attempt to empty %q \n", bucketName)
 				}
 				emtpyBucket(svc, bucketName)
-			}else {
+			} else {
 				fmt.Printf("Dry Run: Would have attempted to empty %q \n", bucketName)
 			}
 			// If we are not in dry-run mode actually attempt to delete the bucket
-			if ! *dryRunMode{
-				if *verboseMode{
+			if !*dryRunMode {
+				if *verboseMode {
 					fmt.Printf("Verbose: Attempt to delete %q \n", bucketName)
 				}
 				deleteBucket(svc, bucketName)
@@ -188,11 +188,10 @@ func main() {
 
 		}
 		os.Exit(0)
-	}else{
-		if *verboseMode{
+	} else {
+		if *verboseMode {
 			fmt.Println("Verbose: User Confirmation = No")
 		}
 		os.Exit(0)
 	}
 }
-
