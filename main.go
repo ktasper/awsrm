@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/manifoldco/promptui"
-	"log"
-	"os"
-	"strings"
 )
 
 // Error handling
@@ -62,7 +63,7 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 	fmt.Printf("Waiting for bucket %q to be deleted...\n", bucketName)
 	fmt.Printf("Deleted Bucket %q \n", bucketName)
 
-	err = svc.WaitUntilBucketNotExists(&s3.HeadBucketInput{
+	_ = svc.WaitUntilBucketNotExists(&s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 }
@@ -159,7 +160,7 @@ func main() {
 		fmt.Printf("* %s\n", i)
 	}
 	userConfirmation := yesNo()
-	if userConfirmation == true {
+	if userConfirmation {
 		if *verboseMode {
 			fmt.Println("Verbose: User Confirmation = Yes")
 		}
