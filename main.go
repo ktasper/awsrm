@@ -14,60 +14,6 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-// Error handling
-func exitErrorf(msg string, args ...interface{}) {
-	_, err := fmt.Fprintf(os.Stderr, msg+"\n", args...)
-	if err != nil {
-		return
-	}
-	os.Exit(1)
-}
-
-// Fancy prompt for users to get a bool value
-func yesNo() bool {
-	prompt := promptui.Select{
-		Label: "Select[Yes/No]",
-		Items: []string{"Yes", "No"},
-	}
-	_, result, err := prompt.Run()
-	if err != nil {
-		log.Fatalf("Prompt failed %v\n", err)
-	}
-	return result == "Yes"
-}
-
-func emtpyBucket(svc *s3.S3, bucketName string) {
-	// Create a list iterator to iterate through the list of bucket objects, deleting each object. If an error occurs, call exitErrorf.
-	// Try and list all the buckets
-	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
-		Bucket: aws.String(bucketName),
-	})
-
-	if err := s3manager.NewBatchDeleteWithClient(svc).Delete(aws.BackgroundContext(), iter); err != nil {
-		exitErrorf("Unable to delete objects from bucket %q, %v \n", bucketName, err)
-	}
-	// Once all the items in the bucket have been deleted, inform the user that the objects were deleted.
-	fmt.Printf("Deleted object(s) from bucket: %s \n", bucketName)
-}
-
-func deleteBucket(svc *s3.S3, bucketName string) {
-	var err error
-	_, err = svc.DeleteBucket(&s3.DeleteBucketInput{
-		Bucket: aws.String(bucketName),
-	})
-	if err != nil {
-		exitErrorf("Unable to delete bucket %q, %v \n", bucketName, err)
-	}
-
-	// Wait until bucket is deleted before finishing
-	fmt.Printf("Waiting for bucket %q to be deleted...\n", bucketName)
-	fmt.Printf("Deleted Bucket %q \n", bucketName)
-
-	_ = svc.WaitUntilBucketNotExists(&s3.HeadBucketInput{
-		Bucket: aws.String(bucketName),
-	})
-}
-
 func main() {
 
 	// Define flags
@@ -195,4 +141,58 @@ func main() {
 		}
 		os.Exit(0)
 	}
+}
+
+// Error handling
+func exitErrorf(msg string, args ...interface{}) {
+	_, err := fmt.Fprintf(os.Stderr, msg+"\n", args...)
+	if err != nil {
+		return
+	}
+	os.Exit(1)
+}
+
+// Fancy prompt for users to get a bool value
+func yesNo() bool {
+	prompt := promptui.Select{
+		Label: "Select[Yes/No]",
+		Items: []string{"Yes", "No"},
+	}
+	_, result, err := prompt.Run()
+	if err != nil {
+		log.Fatalf("Prompt failed %v\n", err)
+	}
+	return result == "Yes"
+}
+
+func emtpyBucket(svc *s3.S3, bucketName string) {
+	// Create a list iterator to iterate through the list of bucket objects, deleting each object. If an error occurs, call exitErrorf.
+	// Try and list all the buckets
+	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
+		Bucket: aws.String(bucketName),
+	})
+
+	if err := s3manager.NewBatchDeleteWithClient(svc).Delete(aws.BackgroundContext(), iter); err != nil {
+		exitErrorf("Unable to delete objects from bucket %q, %v \n", bucketName, err)
+	}
+	// Once all the items in the bucket have been deleted, inform the user that the objects were deleted.
+	fmt.Printf("Deleted object(s) from bucket: %s \n", bucketName)
+}
+
+func deleteBucket(svc *s3.S3, bucketName string) {
+	var err error
+	_, err = svc.DeleteBucket(&s3.DeleteBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		exitErrorf("Unable to delete bucket %q, %v \n", bucketName, err)
+	}
+
+	// Wait until bucket is deleted before finishing
+	fmt.Printf("Waiting for bucket %q to be deleted...\n", bucketName)
+	fmt.Printf("Deleted Bucket %q \n", bucketName)
+
+	_ = svc.WaitUntilBucketNotExists(&s3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
+	})
 }
