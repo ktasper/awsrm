@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -42,7 +44,9 @@ actually want to delete whatever you are using this tool with.`,
 			Config: aws.Config{
 				Region: aws.String(awsRegion),
 			},
+			SharedConfigState: session.SharedConfigEnable,
 		})
+
 		if err != nil {
 			exitErrorf("Unable to create session to AWS: %v \n", err)
 		}
@@ -53,6 +57,66 @@ actually want to delete whatever you are using this tool with.`,
 		// Try and list all the buckets
 		if verboseMode {
 			fmt.Println("Verbose: Attempting to list all S3 buckets")
+		}
+
+		result, err := svc.ListBuckets(nil)
+		if err != nil {
+			exitErrorf("Unable to list buckets, %v", err)
+		}
+
+		// Create a slice to hold the found buckets
+		var foundBuckets []string
+
+		// Loop over every bucket and if they match our search term add it to the slice.
+		for _, b := range result.Buckets {
+			bucketName := aws.StringValue(b.Name)
+			// Case-insensitive search for buckets
+			if strings.Contains(bucketName, strings.ToLower(bucketNames)) || strings.Contains(bucketName, strings.ToUpper(bucketNames)) {
+				// Append to slice
+				foundBuckets = append(foundBuckets, bucketName)
+				if verboseMode {
+					fmt.Printf("Verbose: Found bucket %q \n", bucketName)
+				}
+			}
+		}
+
+		// If no buckets are found tell the user and exit
+		if len(foundBuckets) == 0 {
+			fmt.Printf("No buckets found matching the search term: %q \n", bucketNames)
+			os.Exit(0)
+		}
+
+		// Ask if the user wants to delete the buckets
+		fmt.Println("Would you like to delete the following buckets? ")
+		for _, i := range foundBuckets {
+			fmt.Printf("* %s\n", i)
+		}
+		// Get user input
+		userConfirmation := yesNo()
+		if userConfirmation {
+			fmt.Println("User conf")
+		}
+
+		if userConfirmation {
+			for _, bucketName := range foundBuckets {
+				// If we are not in Dry Run Mode empty the bucket
+				if !dryRunMode {
+					if verboseMode {
+						fmt.Printf("Attempting to empty: %s\n", bucketName)
+					}
+					emtpyBucket(svc, bucketName)
+					if verboseMode {
+						fmt.Printf("Attempting to delete: %s\n", bucketName)
+					}
+					deleteBucket(svc, bucketName)
+				} else {
+					// If we are in dry run mode just print that we WOULD have tried to empty the bucket
+					fmt.Printf("Dry Run: Would have attempted to empty: %s\n", bucketName)
+					fmt.Printf("Dry Run: Would have attempted to delete: %s\n", bucketName)
+					os.Exit(0)
+				}
+
+			}
 		}
 	},
 }
