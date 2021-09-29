@@ -18,8 +18,8 @@ At the moment all it does is delete S3 buckets.
 
 Taken from the AWS Go SDK Docs [here](https://docs.aws.amazon.com/sdk-for-go/api/aws/session/)
 ```
-* Environment Variables
 * Shared Credentials file
-* Shared Configuration file (if SharedConfig is enabled)
-* EC2 Instance Metadata (credentials only)
+* Shared Configuration file
 ```
+
+I have chosen not to support AWS $ENV VARS as most of the tools will be used to work across diffrent profiles. So YMMV
