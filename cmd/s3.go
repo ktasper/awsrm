@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
@@ -24,12 +26,33 @@ WARNING: This will delete a bucket and its contents. Double check you
 actually want to delete whatever you are using this tool with.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("s3 called")
+
 		// Set an easier var for readability, the args the user passes is the bucket name(s)
 		// Take it as its currently in a slice
 		bucketNames := args[0]
 		if verboseMode {
 			fmt.Printf("Verbose: Bucket Name(s): %q \n", bucketNames)
+		}
+
+		// Connect to AWS
+		sess, err := session.NewSessionWithOptions(session.Options{
+			// Specify profile to load for the session's config
+			Profile: awsProfile,
+			// Provide SDK Config options, such as Region.
+			Config: aws.Config{
+				Region: aws.String(awsRegion),
+			},
+		})
+		if err != nil {
+			exitErrorf("Unable to create session to AWS: %v \n", err)
+		}
+
+		// Create S3 service client
+		svc := s3.New(sess)
+
+		// Try and list all the buckets
+		if verboseMode {
+			fmt.Println("Verbose: Attempting to list all S3 buckets")
 		}
 	},
 }
