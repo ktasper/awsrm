@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Makefile` with useful targets
+- Moved to the [cobra framework](https://github.com/spf13/cobra)
+- Added `s3rm` as a subcommand via the [cobra framework](https://github.com/spf13/cobra)
 
 ### Other
 
