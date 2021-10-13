@@ -86,37 +86,37 @@ actually want to delete whatever you are using this tool with.`,
 			os.Exit(0)
 		}
 
-		// Ask if the user wants to delete the buckets
-		fmt.Println("Would you like to delete the following buckets? ")
-		for _, i := range foundBuckets {
-			fmt.Printf("* %s\n", i)
-		}
-		// Get user input
-		userConfirmation := yesNo()
-		if userConfirmation {
-			fmt.Println("User conf")
-		}
-
-		if userConfirmation {
-			for _, bucketName := range foundBuckets {
-				// If we are not in Dry Run Mode empty the bucket
-				if !dryRunMode {
-					if verboseMode {
-						fmt.Printf("Attempting to empty: %s\n", bucketName)
-					}
-					emtpyBucket(svc, bucketName)
-					if verboseMode {
-						fmt.Printf("Attempting to delete: %s\n", bucketName)
-					}
-					deleteBucket(svc, bucketName)
-				} else {
-					// If we are in dry run mode just print that we WOULD have tried to empty the bucket
-					fmt.Printf("Dry Run: Would have attempted to empty: %s\n", bucketName)
-					fmt.Printf("Dry Run: Would have attempted to delete: %s\n", bucketName)
-					os.Exit(0)
-				}
-
+		if !quietMode {
+			// Ask if the user wants to delete the buckets
+			fmt.Println("Would you like to delete the following buckets? ")
+			for _, i := range foundBuckets {
+				fmt.Printf("* %s\n", i)
 			}
+			// Get user input
+			userConfirmation := yesNo()
+			if !userConfirmation {
+				os.Exit(0)
+			}
+		}
+
+		for _, bucketName := range foundBuckets {
+			// If we are not in Dry Run Mode empty the bucket
+			if !dryRunMode {
+				if verboseMode {
+					fmt.Printf("Attempting to empty: %s\n", bucketName)
+				}
+				emtpyBucket(svc, bucketName)
+				if verboseMode {
+					fmt.Printf("Attempting to delete: %s\n", bucketName)
+				}
+				deleteBucket(svc, bucketName)
+			} else {
+				// If we are in dry run mode just print that we WOULD have tried to empty the bucket
+				fmt.Printf("Dry Run: Would have attempted to empty: %s\n", bucketName)
+				fmt.Printf("Dry Run: Would have attempted to delete: %s\n", bucketName)
+				os.Exit(0)
+			}
+
 		}
 	},
 }
