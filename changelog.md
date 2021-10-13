@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Makefile` with useful targets
 - Moved to the [cobra framework](https://github.com/spf13/cobra)
-- Added `s3rm` as a subcommand via the [cobra framework](https://github.com/spf13/cobra)
+- Added `s3` as a subcommand via the [cobra framework](https://github.com/spf13/cobra)
+- Added `quiet` mode support on the `s3` so you are not prompted to delete buckets.
 
 ### Other
 
