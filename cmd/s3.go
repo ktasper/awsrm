@@ -36,20 +36,8 @@ actually want to delete whatever you are using this tool with.`,
 			fmt.Printf("Verbose: Bucket Name(s): %q \n", bucketNames)
 		}
 
-		// Connect to AWS
-		sess, err := session.NewSessionWithOptions(session.Options{
-			// Specify profile to load for the session's config
-			Profile: awsProfile,
-			// Provide SDK Config options, such as Region.
-			Config: aws.Config{
-				Region: aws.String(awsRegion),
-			},
-			SharedConfigState: session.SharedConfigEnable,
-		})
-
-		if err != nil {
-			exitErrorf("Unable to create session to AWS: %v \n", err)
-		}
+		// Connect to aws and create a session
+		sess := awsClient()
 
 		// Create S3 service client
 		svc := s3.New(sess)
@@ -59,10 +47,7 @@ actually want to delete whatever you are using this tool with.`,
 			fmt.Println("Verbose: Attempting to list all S3 buckets")
 		}
 
-		result, err := svc.ListBuckets(nil)
-		if err != nil {
-			exitErrorf("Unable to list buckets, %v", err)
-		}
+		result := listBuckets(svc)
 
 		// Create a slice to hold the found buckets
 		var foundBuckets []string
@@ -166,4 +151,31 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 	_ = svc.WaitUntilBucketNotExists(&s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
+}
+
+func awsClient() *session.Session {
+	// Connect to AWS
+	sess, err := session.NewSessionWithOptions(session.Options{
+		// Specify profile to load for the session's config
+		Profile: awsProfile,
+		// Provide SDK Config options, such as Region.
+		Config: aws.Config{
+			Region: aws.String(awsRegion),
+		},
+		SharedConfigState: session.SharedConfigEnable,
+	})
+
+	if err != nil {
+		exitErrorf("Unable to create session to AWS: %v \n", err)
+	}
+	return sess
+
+}
+
+func listBuckets(svc *s3.S3) *s3.ListBucketsOutput {
+	result, err := svc.ListBuckets(nil)
+	if err != nil {
+		exitErrorf("Unable to list buckets, %v", err)
+	}
+	return result
 }
