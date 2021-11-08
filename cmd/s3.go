@@ -1,5 +1,9 @@
 package cmd
 
+// TODO: Read in bucket names from a file
+// TODO: GoRoutines
+// TODO: Add a check to ensure that we are not trying to delete a bucket that is in the same region as an active vpc (Add a local flag to skip the safety check)
+
 import (
 	"fmt"
 	"os"
