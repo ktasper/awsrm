@@ -1,6 +1,6 @@
 package cmd
 
-// TODO: Read in bucket names from a file
+// TODO: Read in bucket names from a file (Add a sub command)
 // TODO: GoRoutines
 // TODO: Add a check to ensure that we are not trying to delete a bucket that is in the same region as an active vpc (Add a local flag to skip the safety check)
 
@@ -136,7 +136,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// s3Cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }
 
 func emptyBucket(svc *s3.S3, bucketName string) {
