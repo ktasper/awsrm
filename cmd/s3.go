@@ -37,7 +37,7 @@ actually want to delete whatever you are using this tool with.`,
 		// Take it as its currently in a slice
 		bucketNames := args[0]
 		if verboseMode {
-			fmt.Printf("Verbose: Bucket Name(s): %q \n", bucketNames)
+			fmt.Printf("ℹ️ Verbose: Bucket Name(s): %q \n", bucketNames)
 		}
 
 		// Connect to aws and create a session
@@ -48,7 +48,7 @@ actually want to delete whatever you are using this tool with.`,
 
 		// Try and list all the buckets
 		if verboseMode {
-			fmt.Println("Verbose: Attempting to list all S3 buckets")
+			fmt.Println("ℹ️ Verbose: Attempting to list all S3 buckets")
 		}
 
 		result := listBuckets(svc)
@@ -64,14 +64,14 @@ actually want to delete whatever you are using this tool with.`,
 				// Append to slice
 				foundBuckets = append(foundBuckets, bucketName)
 				if verboseMode {
-					fmt.Printf("Verbose: Found bucket %q \n", bucketName)
+					fmt.Printf("ℹ️ Verbose: Found bucket %q \n", bucketName)
 				}
 			}
 		}
 
 		// If no buckets are found tell the user and exit
 		if len(foundBuckets) == 0 {
-			fmt.Printf("No buckets found matching the search term: %q \n", bucketNames)
+			fmt.Printf("❗️ No buckets found matching the search term: %q \n", bucketNames)
 			os.Exit(0)
 		}
 
@@ -92,11 +92,11 @@ actually want to delete whatever you are using this tool with.`,
 			// First we want to get the region of the bucket
 			bucketRegion, err := s3manager.GetBucketRegion(aws.BackgroundContext(), sess, bucketName, awsRegion)
 			if err != nil {
-				exitErrorf("Unable to get bucket region, %v", err)
+				exitErrorf("❗️ Unable to get bucket region, %v", err)
 			}
 			if verboseMode {
-				fmt.Printf("Verbose: Bucket %q is in region %q \n", bucketName, bucketRegion)
-				fmt.Printf("Verbose: Changing session region to match the bucket: UserSession=%q BucketSession=%q \n", awsRegion, bucketRegion)
+				fmt.Printf("ℹ️ Verbose: Bucket %q is in region %q \n", bucketName, bucketRegion)
+				fmt.Printf("ℹ️ Verbose: Changing session region to match the bucket: UserSession=%q BucketSession=%q \n", awsRegion, bucketRegion)
 			}
 			// connect to the same region as the bucket
 			sess = awsClient(bucketRegion, awsProfile)
@@ -105,18 +105,18 @@ actually want to delete whatever you are using this tool with.`,
 			// If we are not in Dry Run Mode empty the bucket
 			if !dryRunMode {
 				if verboseMode {
-					fmt.Printf("Attempting to empty: %s\n", bucketName)
+					fmt.Printf("🪣 Attempting to empty: %s\n", bucketName)
 				}
 				// empty the bucket in the correct region
 				emptyBucket(svc, bucketName)
 				if verboseMode {
-					fmt.Printf("Attempting to delete: %s\n", bucketName)
+					fmt.Printf("🪣 Attempting to delete: %s\n", bucketName)
 				}
 				deleteBucket(svc, bucketName)
 			} else {
 				// If we are in dry run mode just print that we WOULD have tried to empty the bucket
-				fmt.Printf("Dry Run: Would have attempted to empty: %s\n", bucketName)
-				fmt.Printf("Dry Run: Would have attempted to delete: %s\n", bucketName)
+				fmt.Printf("😴 Dry Run: Would have attempted to empty: %s\n", bucketName)
+				fmt.Printf("😴 Dry Run: Would have attempted to delete: %s\n", bucketName)
 				os.Exit(0)
 			}
 
@@ -146,10 +146,10 @@ func emptyBucket(svc *s3.S3, bucketName string) {
 	})
 
 	if err := s3manager.NewBatchDeleteWithClient(svc).Delete(aws.BackgroundContext(), iter); err != nil {
-		exitErrorf("Unable to delete objects from bucket %q, %v \n", bucketName, err)
+		exitErrorf("❗️ Unable to delete objects from bucket %q, %v \n", bucketName, err)
 	}
 	// Once all the items in the bucket have been deleted, inform the user that the objects were deleted.
-	fmt.Printf("Deleted object(s) from bucket: %s \n", bucketName)
+	fmt.Printf("🪣 Deleted object(s) from bucket: %s \n", bucketName)
 }
 
 func deleteBucket(svc *s3.S3, bucketName string) {
@@ -158,12 +158,12 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		exitErrorf("Unable to delete bucket %q, %v \n", bucketName, err)
+		exitErrorf("❗️ Unable to delete bucket %q, %v \n", bucketName, err)
 	}
 
 	// Wait until bucket is deleted before finishing
-	fmt.Printf("Waiting for bucket %q to be deleted...\n", bucketName)
-	fmt.Printf("Deleted Bucket %q \n", bucketName)
+	fmt.Printf("🪣 Waiting for bucket %q to be deleted...\n", bucketName)
+	fmt.Printf("🪣 Deleted Bucket %q \n", bucketName)
 
 	_ = svc.WaitUntilBucketNotExists(&s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
@@ -183,7 +183,7 @@ func awsClient(region string, profile string) *session.Session {
 	})
 
 	if err != nil {
-		exitErrorf("Unable to create session to AWS: %v \n", err)
+		exitErrorf("❗️ Unable to create session to AWS: %v \n", err)
 	}
 	return sess
 
@@ -192,7 +192,7 @@ func awsClient(region string, profile string) *session.Session {
 func listBuckets(svc *s3.S3) *s3.ListBucketsOutput {
 	result, err := svc.ListBuckets(nil)
 	if err != nil {
-		exitErrorf("Unable to list buckets, %v", err)
+		exitErrorf("❗️ Unable to list buckets, %v", err)
 	}
 	return result
 }
