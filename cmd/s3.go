@@ -37,7 +37,7 @@ actually want to delete whatever you are using this tool with.`,
 		}
 
 		// Connect to aws and create a session
-		sess := awsClient()
+		sess := awsClient(awsRegion, awsProfile)
 
 		// Create S3 service client
 		svc := s3.New(sess)
@@ -85,12 +85,26 @@ actually want to delete whatever you are using this tool with.`,
 		}
 
 		for _, bucketName := range foundBuckets {
+			// First we want to get the region of the bucket
+			bucketRegion, err := s3manager.GetBucketRegion(aws.BackgroundContext(), sess, bucketName, awsRegion)
+			if err != nil {
+				exitErrorf("Unable to get bucket region, %v", err)
+			}
+			if verboseMode {
+				fmt.Printf("Verbose: Bucket %q is in region %q \n", bucketName, bucketRegion)
+				fmt.Printf("Verbose: Changing session region to match the bucket: UserSession=%q BucketSession=%q \n", awsRegion, bucketRegion)
+			}
+			// connect to the same region as the bucket
+			sess = awsClient(bucketRegion, awsProfile)
+			// Create S3 service client
+			svc := s3.New(sess)
 			// If we are not in Dry Run Mode empty the bucket
 			if !dryRunMode {
 				if verboseMode {
 					fmt.Printf("Attempting to empty: %s\n", bucketName)
 				}
-				emtpyBucket(svc, bucketName)
+				// empty the bucket in the correct region
+				emptyBucket(svc, bucketName)
 				if verboseMode {
 					fmt.Printf("Attempting to delete: %s\n", bucketName)
 				}
@@ -121,7 +135,7 @@ func init() {
 
 }
 
-func emtpyBucket(svc *s3.S3, bucketName string) {
+func emptyBucket(svc *s3.S3, bucketName string) {
 	// Create a list iterator to iterate through the list of bucket objects, deleting each object. If an error occurs, call exitErrorf.
 	// Try and list all the buckets
 	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
@@ -153,14 +167,14 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 	})
 }
 
-func awsClient() *session.Session {
+func awsClient(region string, profile string) *session.Session {
 	// Connect to AWS
 	sess, err := session.NewSessionWithOptions(session.Options{
 		// Specify profile to load for the session's config
-		Profile: awsProfile,
+		Profile: profile,
 		// Provide SDK Config options, such as Region.
 		Config: aws.Config{
-			Region: aws.String(awsRegion),
+			Region: aws.String(region),
 		},
 		SharedConfigState: session.SharedConfigEnable,
 	})
