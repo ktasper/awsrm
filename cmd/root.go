@@ -1,5 +1,7 @@
 package cmd
 
+// TODO: Add a version command
+
 import (
 	"fmt"
 	"log"
