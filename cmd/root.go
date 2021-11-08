@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -46,6 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&awsRegion, "region", "r", "us-east-1", "The AWS region you wish to use")
 	rootCmd.PersistentFlags().StringVarP(&awsProfile, "profile", "p", "default", "The AWS profile you wish to use")
 	rootCmd.PersistentFlags().BoolVarP(&dryRunMode, "dry-run", "", false, "Enables dry-run mode (Will not make any changes)")
+	rootCmd.PersistentFlags().BoolVarP(&vpcSafeMode, "safe", "", true, "VPC Safe mode; Will delete current action ONLY if a matching vpc in the same region cannot be found")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -57,6 +59,7 @@ var (
 	verboseMode bool
 	quietMode   bool
 	dryRunMode  bool
+	vpcSafeMode bool
 	awsRegion   string
 	awsProfile  string
 )
