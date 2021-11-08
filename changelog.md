@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `s3` as a subcommand via the [cobra framework](https://github.com/spf13/cobra)
 - Added `quiet` mode support on the `s3` so you are not prompted to delete buckets.
 
+#### S3
+
+- Will empty and delete S3 buckets.
+- Will create a new client and switch to the correct region to delete the buckets you provide.
+
 ### Other
 
 - Cleaned the imports
