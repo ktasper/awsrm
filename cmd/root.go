@@ -3,9 +3,7 @@ package cmd
 // TODO: Add a version command
 
 import (
-	"fmt"
 	"log"
-	"os"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -65,15 +63,6 @@ var (
 	awsRegion   string
 	awsProfile  string
 )
-
-// Error handling
-func exitErrorf(msg string, args ...interface{}) {
-	_, err := fmt.Fprintf(os.Stderr, msg+"\n", args...)
-	if err != nil {
-		return
-	}
-	os.Exit(1)
-}
 
 // Fancy prompt for users to get a bool value
 func yesNo() bool {

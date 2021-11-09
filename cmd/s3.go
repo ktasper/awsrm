@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/ktasper/awsrm/handlers"
 
 	"github.com/spf13/cobra"
 )
@@ -41,7 +41,7 @@ actually want to delete whatever you are using this tool with.`,
 		}
 
 		// Connect to aws and create a session
-		sess := awsClient(awsRegion, awsProfile)
+		sess := handlers.AwsClient(awsRegion, awsProfile)
 
 		// Create S3 service client
 		svc := s3.New(sess)
@@ -92,14 +92,14 @@ actually want to delete whatever you are using this tool with.`,
 			// First we want to get the region of the bucket
 			bucketRegion, err := s3manager.GetBucketRegion(aws.BackgroundContext(), sess, bucketName, awsRegion)
 			if err != nil {
-				exitErrorf("❗️ Unable to get bucket region, %v", err)
+				handlers.ExitErrorf("❗️ Unable to get bucket region, %v", err)
 			}
 			if verboseMode {
 				fmt.Printf("ℹ️ Verbose: Bucket %q is in region %q \n", bucketName, bucketRegion)
 				fmt.Printf("ℹ️ Verbose: Changing session region to match the bucket: UserSession=%q BucketSession=%q \n", awsRegion, bucketRegion)
 			}
 			// connect to the same region as the bucket
-			sess = awsClient(bucketRegion, awsProfile)
+			sess = handlers.AwsClient(bucketRegion, awsProfile)
 			// Create S3 service client
 			svc := s3.New(sess)
 			// If we are not in Dry Run Mode empty the bucket
@@ -139,14 +139,14 @@ func init() {
 }
 
 func emptyBucket(svc *s3.S3, bucketName string) {
-	// Create a list iterator to iterate through the list of bucket objects, deleting each object. If an error occurs, call exitErrorf.
+	// Create a list iterator to iterate through the list of bucket objects, deleting each object. If an error occurs, call handlers.ExitErrorF.
 	// Try and list all the buckets
 	iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
 		Bucket: aws.String(bucketName),
 	})
 
 	if err := s3manager.NewBatchDeleteWithClient(svc).Delete(aws.BackgroundContext(), iter); err != nil {
-		exitErrorf("❗️ Unable to delete objects from bucket %q, %v \n", bucketName, err)
+		handlers.ExitErrorf("❗️ Unable to delete objects from bucket %q, %v \n", bucketName, err)
 	}
 	// Once all the items in the bucket have been deleted, inform the user that the objects were deleted.
 	fmt.Printf("🪣 Deleted object(s) from bucket: %s \n", bucketName)
@@ -158,7 +158,7 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		exitErrorf("❗️ Unable to delete bucket %q, %v \n", bucketName, err)
+		handlers.ExitErrorf("❗️ Unable to delete bucket %q, %v \n", bucketName, err)
 	}
 
 	// Wait until bucket is deleted before finishing
@@ -170,29 +170,10 @@ func deleteBucket(svc *s3.S3, bucketName string) {
 	})
 }
 
-func awsClient(region string, profile string) *session.Session {
-	// Connect to AWS
-	sess, err := session.NewSessionWithOptions(session.Options{
-		// Specify profile to load for the session's config
-		Profile: profile,
-		// Provide SDK Config options, such as Region.
-		Config: aws.Config{
-			Region: aws.String(region),
-		},
-		SharedConfigState: session.SharedConfigEnable,
-	})
-
-	if err != nil {
-		exitErrorf("❗️ Unable to create session to AWS: %v \n", err)
-	}
-	return sess
-
-}
-
 func listBuckets(svc *s3.S3) *s3.ListBucketsOutput {
 	result, err := svc.ListBuckets(nil)
 	if err != nil {
-		exitErrorf("❗️ Unable to list buckets, %v", err)
+		handlers.ExitErrorf("❗️ Unable to list buckets, %v", err)
 	}
 	return result
 }
