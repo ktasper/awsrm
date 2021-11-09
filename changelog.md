@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Will empty and delete S3 buckets.
 - Will create a new client and switch to the correct region to delete the buckets you provide.
+- Will not delete a S3 bucket if the name is the same as a `vpc` in the same region. (Unless `--skip-vpc-check` is set)
 
 ### Other
 
