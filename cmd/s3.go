@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/ktasper/awsrm/handlers"
@@ -37,7 +38,7 @@ actually want to delete whatever you are using this tool with.`,
 		// Take it as its currently in a slice
 		bucketNames := args[0]
 		if verboseMode {
-			fmt.Printf("ℹ️ Verbose: Bucket Name(s): %q \n", bucketNames)
+			fmt.Printf("ℹ️ - Verbose: Bucket Name(s): %q \n", bucketNames)
 		}
 
 		// Connect to aws and create a session
@@ -48,7 +49,7 @@ actually want to delete whatever you are using this tool with.`,
 
 		// Try and list all the buckets
 		if verboseMode {
-			fmt.Println("ℹ️ Verbose: Attempting to list all S3 buckets")
+			fmt.Println("ℹ️ - Verbose: Attempting to list all S3 buckets")
 		}
 
 		result := handlers.ListBuckets(svc)
@@ -64,14 +65,14 @@ actually want to delete whatever you are using this tool with.`,
 				// Append to slice
 				foundBuckets = append(foundBuckets, bucketName)
 				if verboseMode {
-					fmt.Printf("ℹ️ Verbose: Found bucket %q \n", bucketName)
+					fmt.Printf("ℹ️ - Verbose: Found bucket %q \n", bucketName)
 				}
 			}
 		}
 
 		// If no buckets are found tell the user and exit
 		if len(foundBuckets) == 0 {
-			fmt.Printf("❗️ No buckets found matching the search term: %q \n", bucketNames)
+			fmt.Printf("❗️ - No buckets found matching the search term: %q \n", bucketNames)
 			os.Exit(0)
 		}
 
@@ -92,34 +93,47 @@ actually want to delete whatever you are using this tool with.`,
 			// First we want to get the region of the bucket
 			bucketRegion, err := s3manager.GetBucketRegion(aws.BackgroundContext(), sess, bucketName, awsRegion)
 			if err != nil {
-				handlers.ExitErrorf("❗️ Unable to get bucket region, %v", err)
+				handlers.ExitErrorf("❗️ - Unable to get bucket region, %v", err)
 			}
 			if verboseMode {
-				fmt.Printf("ℹ️ Verbose: Bucket %q is in region %q \n", bucketName, bucketRegion)
-				fmt.Printf("ℹ️ Verbose: Changing session region to match the bucket: UserSession=%q BucketSession=%q \n", awsRegion, bucketRegion)
+				fmt.Printf("ℹ️ - Verbose: Bucket %q is in region %q \n", bucketName, bucketRegion)
+				fmt.Printf("ℹ️ - Verbose: Changing session region to match the bucket: UserSession=%q BucketSession=%q \n", awsRegion, bucketRegion)
 			}
 			// connect to the same region as the bucket
 			sess = handlers.AwsClient(bucketRegion, awsProfile)
-			// Create S3 service client
+			// Create S3 service client in the same region as the bucket
 			svc := s3.New(sess)
-			// If we are not in Dry Run Mode empty the bucket
-			if !dryRunMode {
-				if verboseMode {
-					fmt.Printf("🪣 Attempting to empty: %s\n", bucketName)
-				}
-				// empty the bucket in the correct region
-				handlers.EmptyBucket(svc, bucketName)
-				if verboseMode {
-					fmt.Printf("🪣 Attempting to delete: %s\n", bucketName)
-				}
-				handlers.DeleteBucket(svc, bucketName)
-			} else {
-				// If we are in dry run mode just print that we WOULD have tried to empty the bucket
-				fmt.Printf("😴 Dry Run: Would have attempted to empty: %s\n", bucketName)
-				fmt.Printf("😴 Dry Run: Would have attempted to delete: %s\n", bucketName)
-				os.Exit(0)
-			}
+			// Also create a EC2 service client in the same region as the bucket
+			vpcSvc := ec2.New(sess)
+			// Get the names of all the vpc's in the region
+			vpc_names := handlers.ListVPCNames(vpcSvc)
+			for _, vpc_name := range vpc_names {
+				fmt.Println("Found VPC: " + vpc_name)
+				// If the vpc_name is in the bucket name and skipVpcCheck is not set, then print a warning and skip the bucket
+				if strings.Contains(bucketName, vpc_name) && !skipVpcCheck {
+					fmt.Printf("❗️ - Bucket %q is in the same region as an active VPC %q, skipping \n", bucketName, vpc_name)
+					continue
+				} else {
 
+					// If we are not in Dry Run Mode empty the bucket
+					if !dryRunMode {
+						if verboseMode {
+							fmt.Printf("🪣 - Attempting to empty: %s\n", bucketName)
+						}
+						// empty the bucket in the correct region
+						handlers.EmptyBucket(svc, bucketName)
+						if verboseMode {
+							fmt.Printf("🪣 - Attempting to delete: %s\n", bucketName)
+						}
+						handlers.DeleteBucket(svc, bucketName)
+					} else {
+						// If we are in dry run mode just print that we WOULD have tried to empty the bucket
+						fmt.Printf("😴 - Dry Run: Would have attempted to empty: %s\n", bucketName)
+						fmt.Printf("😴 - Dry Run: Would have attempted to delete: %s\n", bucketName)
+						os.Exit(0)
+					}
+				}
+			}
 		}
 	},
 }
