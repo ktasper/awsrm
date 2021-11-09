@@ -47,7 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&awsRegion, "region", "r", "us-east-1", "The AWS region you wish to use")
 	rootCmd.PersistentFlags().StringVarP(&awsProfile, "profile", "p", "default", "The AWS profile you wish to use")
 	rootCmd.PersistentFlags().BoolVarP(&dryRunMode, "dry-run", "", false, "Enables dry-run mode (Will not make any changes)")
-	rootCmd.PersistentFlags().BoolVarP(&vpcSafeMode, "safe", "", true, "VPC Safe mode; Will delete current action ONLY if a matching vpc in the same region cannot be found")
+	rootCmd.PersistentFlags().BoolVarP(&skipVpcCheck, "skip-vpc-check", "", false, "Skip VPC Check; Skip the check to see if a matching vpc exists in the region")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -56,12 +56,12 @@ func init() {
 
 // Here is vars for all the flags I want to use
 var (
-	verboseMode bool
-	quietMode   bool
-	dryRunMode  bool
-	vpcSafeMode bool
-	awsRegion   string
-	awsProfile  string
+	verboseMode  bool
+	quietMode    bool
+	dryRunMode   bool
+	skipVpcCheck bool
+	awsRegion    string
+	awsProfile   string
 )
 
 // Fancy prompt for users to get a bool value
