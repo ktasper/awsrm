@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.2] - TBD
+## [0.0.2 - 11/11/21 ](https://github.com/ktasper/awsrm/releases/tag/0.0.2)
 
 ### Added
 
@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cleaned the imports
 - Updated `go.sum`
+- Added a release script
 
 ## [[0.0.1] - 21-09-21](https://github.com/ktasper/awsrm/releases/tag/0.0.1) 
 
