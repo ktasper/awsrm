@@ -1,7 +1,5 @@
 package cmd
 
-// TODO: Read in bucket names from a file (Add a sub command)
-// TODO: GoRoutines
 import (
 	"fmt"
 	"os"
