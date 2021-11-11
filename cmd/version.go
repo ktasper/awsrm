@@ -21,5 +21,5 @@ func init() {
 }
 
 func version() string {
-	return "0.0.1"
+	return "0.1.0"
 }
