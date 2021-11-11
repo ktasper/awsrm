@@ -1,0 +1,14 @@
+# project
+
+- Document the flags
+
+- Document the behaviour of the S3 command
+
+
+
+## S3
+
+- Clean up the outputs (Make it less messy)
+- Go routines
+
+- Read in bucket names from a file (Add a sub command)
