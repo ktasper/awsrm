@@ -116,11 +116,12 @@ actually want to delete whatever you are using this tool with.`,
 				if verboseMode {
 					fmt.Printf("🪣 - Attempting to empty: %s\n", bucketName)
 				}
-				// empty the bucket in the correct region
-				handlers.EmptyBucket(svc, bucketName)
+				// We need to pass in the service client, the bucket name, and the debug flag so we can print out debug info if needed
+				handlers.EmptyBucketV2(svc, bucketName, debugMode)
 				if verboseMode {
 					fmt.Printf("🪣 - Attempting to delete: %s\n", bucketName)
 				}
+				// Delete the bucket
 				handlers.DeleteBucket(svc, bucketName)
 			} else {
 				// If we are in dry run mode just print that we WOULD have tried to empty the bucket
