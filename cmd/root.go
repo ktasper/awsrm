@@ -41,11 +41,17 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().BoolVarP(&verboseMode, "verbose", "v", false, "Enables verbose mode")
+	rootCmd.PersistentFlags().BoolVarP(&debugMode, "debug", "", false, "Enables debug mode (Also enables verbose mode)")
 	rootCmd.PersistentFlags().BoolVarP(&quietMode, "quiet", "q", false, "Enables quiet mode, you will not be prompted for any input")
 	rootCmd.PersistentFlags().StringVarP(&awsRegion, "region", "r", "us-east-1", "The AWS region you wish to use")
 	rootCmd.PersistentFlags().StringVarP(&awsProfile, "profile", "p", "default", "The AWS profile you wish to use")
 	rootCmd.PersistentFlags().BoolVarP(&dryRunMode, "dry-run", "", false, "Enables dry-run mode (Will not make any changes)")
 	rootCmd.PersistentFlags().BoolVarP(&skipVpcCheck, "skip-vpc-check", "", false, "Skip VPC Check; Skip the check to see if a matching vpc exists in the region")
+
+	// Enable verbose mode if debug flag is set
+	if debugMode {
+		verboseMode = true
+	}
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -55,6 +61,7 @@ func init() {
 // Here is vars for all the flags I want to use
 var (
 	verboseMode  bool
+	debugMode    bool
 	quietMode    bool
 	dryRunMode   bool
 	skipVpcCheck bool
