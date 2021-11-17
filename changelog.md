@@ -5,12 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
-
+## [1.0.0 - TBD](https://github.com/ktasper/awsrm/releases/tag/0.2.0)
+### Goals
+- Use the log package
+- Clean up outputs
+- Add the binary to gitignore
+- Add some sort of unit testing
+- Add a pipeline for commits to `develop` to lint and run the tests
+- Implement a `s3` sub command called `from-file` that takes a file of s3 bucket names and deletes them.
+- Add a few examples of usage to the README.md
+- Rename the repo to `awsrm` so we can install it properly.
 
 ## [0.1.1 - 17/11/21 ](https://github.com/ktasper/awsrm/releases/tag/0.1.1)
 ### Added
 - A `--debug` flag that will enable the `--verbose` flag and provide more in depth outputs
+
+### Fixed
 - The `s3` command now will delete versioned buckets (What a job that was)
 
 
