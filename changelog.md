@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
-## [0.1.1 - TBD ](https://github.com/ktasper/awsrm/releases/tag/0.1.1)
+## [0.1.1 - 17/11/21 ](https://github.com/ktasper/awsrm/releases/tag/0.1.1)
 ### Added
 - A `--debug` flag that will enable the `--verbose` flag and provide more in depth outputs
 - The `s3` command now will delete versioned buckets (What a job that was)
