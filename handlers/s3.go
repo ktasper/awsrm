@@ -52,8 +52,6 @@ func ListObjects(svc *s3.S3, bucketName string) ([]string, error) {
 }
 
 func EmptyBucketV2(svc *s3.S3, bucketName string, debugMode bool) (ret bool) {
-	// TODO dump the iters out of the function
-
 	// Get a list of all the objects in the bucket
 	objects, err := ListObjects(svc, bucketName)
 	// Iterate over each object and delete it
